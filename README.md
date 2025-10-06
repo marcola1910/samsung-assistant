@@ -1,54 +1,158 @@
-# samsung-assistant
+# 🛍️ Samsung Assistant — Shopping AI PoC
 
-This project uses Quarkus, the Supersonic Subatomic Java Framework.
+[![Java](https://img.shields.io/badge/Java-17+-red.svg)](https://openjdk.org/projects/jdk/17/)
+[![Quarkus](https://img.shields.io/badge/Quarkus-3.12.3-blue.svg)](https://quarkus.io/)
+[![Maven](https://img.shields.io/badge/Maven-3.9+-orange.svg)](https://maven.apache.org/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-If you want to learn more about Quarkus, please visit its website: <https://quarkus.io/>.
+> Conversational **shopping assistant** for Samsung Brazil’s product catalog, built with **Quarkus + LangChain4j + Ollama + EasyRAG**.
 
-## Running the application in dev mode
+---
 
-You can run your application in dev mode that enables live coding using:
+## 🧩 Overview
 
-```shell script
-./mvnw compile quarkus:dev
+This is a functional **Proof of Concept** of a shopping assistant capable of answering questions about Samsung products using **Retrieval-Augmented Generation (RAG)**.
+
+It combines:
+
+* ⚡ **Quarkus** — lightweight, reactive Java framework
+* 🔗 **LangChain4j** — LLM orchestration in Java
+* 🦙 **Ollama** — local LLM server (`gpt-oss:20b`)
+* 📚 **EasyRAG** — contextual retrieval from JSON catalog
+
+The assistant answers in **any language** — ask in Portuguese, English, or another language, and it will respond using catalog data.
+
+---
+
+## 📂 Project structure
+
+```text
+├── src
+│   ├── main
+│   │   ├── java/dev/ia
+│   │   │   ├── SamsungAgentAssistant.java
+│   │   │   └── SamsungAgentResource.java
+│   │   └── resources
+│   │       ├── application.properties
+│   │       └── rag/   ← context folder (JSON / RAG files)
+│   └── test
+├── pom.xml
+├── README.md
+└── mvnw*
 ```
 
-> **_NOTE:_**  Quarkus now ships with a Dev UI, which is available in dev mode only at <http://localhost:8080/q/dev/>.
+---
 
-## Packaging and running the application
+## 🚀 Getting Started
 
-The application can be packaged using:
+### Prerequisites
 
-```shell script
+* ☕ Java 17+
+* 🔧 Maven 3.9+
+* 🦙 Ollama installed (or running in Docker)
+* 📂 Samsung catalog JSON placed in `src/main/resources/rag`
+
+### Run locally
+
+1. Clone the repository
+
+```bash
+git clone https://github.com/marcola1910/samsung-assistant.git
+cd samsung-assistant
+```
+
+2. Start Ollama
+
+```bash
+ollama serve
+ollama pull gpt-oss:20b
+```
+
+3. Run Quarkus in dev mode
+
+```bash
+./mvnw quarkus:dev
+```
+
+4. Query the REST endpoint
+
+```bash
+curl -X POST -H "Content-Type: text/plain" \
+  -d "Qual o preço do Galaxy S24 Ultra?" \
+  http://localhost:8080/samsung
+```
+
+5. (Optional) Build a production JAR
+
+```bash
 ./mvnw package
+java -jar target/quarkus-app/quarkus-run.jar
 ```
 
-It produces the `quarkus-run.jar` file in the `target/quarkus-app/` directory.
-Be aware that it’s not an _über-jar_ as the dependencies are copied into the `target/quarkus-app/lib/` directory.
+---
 
-The application is now runnable using `java -jar target/quarkus-app/quarkus-run.jar`.
+## 💻 Implementation Details
 
-If you want to build an _über-jar_, execute the following command:
+* `SamsungAgentAssistant.java` → AI interface (`@RegisterAiService`)
+* `SamsungAgentResource.java` → REST endpoint `/samsung`
+* `application.properties` → config for Ollama + EasyRAG
+* `rag/` → contains the JSON catalog for contextual retrieval
 
-```shell script
-./mvnw package -Dquarkus.package.jar.type=uber-jar
+---
+
+## 🧪 Examples
+
+* Direct question:
+
+```text
+Qual o preço do produto SM-S928BZTKZTO?
 ```
 
-The application, packaged as an _über-jar_, is now runnable using `java -jar target/*-runner.jar`.
+→ Returns price, product link, and details.
 
-## Creating a native executable
+* Open-ended question:
 
-You can create a native executable using:
-
-```shell script
-./mvnw package -Dnative
+```text
+Qual notebook da Samsung é melhor para jogos?
 ```
 
-Or, if you don't have GraalVM installed, you can run the native executable build in a container using:
+→ Compares available notebooks (RAM, CPU, GPU).
 
-```shell script
-./mvnw package -Dnative -Dquarkus.native.container-build=true
-```
+🌍 Multilingual: the model answers consistently in any language.
 
-You can then execute your native executable with: `./target/samsung-assistant-1.0.0-runner`
+---
 
-If you want to learn more about building native executables, please consult <https://quarkus.io/guides/maven-tooling>.
+## 📚 About the RAG
+
+The RAG is based on a structured JSON catalog with:
+
+* **Categories** (e.g., `smartphones`, `galaxy-s`, `galaxy-book`)
+* **Products** with `sku`, `title`, `url`, `price_cash`, `price_list`
+* Rule: if `price_cash = null` → product is **out of stock**
+
+---
+
+## ⚠️ Limitations
+
+* The `gpt-oss:20b` model is **heavy** → open-ended questions may take ~2 minutes on CPU.
+* Catalog data may be outdated (prices change).
+* Prototype doesn’t handle live inventory updates yet.
+
+---
+
+## 📈 Next Steps
+
+* Optimize RAG (chunking, overlap, filters)
+* Try smaller models (`llama3:8b`) for lower latency
+* Add caching for frequent queries
+* Deploy to GPU-backed server
+* Create a friendly web/chat UI
+
+---
+
+## 📝 License & Contribution
+
+Contributions are welcome!
+Open issues or PRs to improve RAG, extend catalog data, or boost performance.
+
+[MIT License](LICENSE)
